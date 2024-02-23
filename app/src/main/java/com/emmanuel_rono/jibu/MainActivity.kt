@@ -1,64 +1,65 @@
 package com.emmanuel_rono.jibu
 
-import android.media.session.PlaybackState.CustomAction
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.EnterTransition.Companion.None
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
-import androidx.compose.runtime.Composable
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
- import com.emmanuel_rono.jibu.ui.theme.JibuTheme
-import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
+import com.emmanuel_rono.jibu.ui.theme.JibuTheme
 import com.emmanuel_rono.jibu.ui.theme.Repository.detailRepository
-import com.emmanuel_rono.jibu.ui.theme.View.CustomItem
-
-
+import com.emmanuel_rono.jibu.ui.theme.model.DataViewModel
+import com.emmanuel_rono.jibu.ui.theme.model.DataViewModelFactory
+import com.emmanuel_rono.jibu.ui.theme.model.PersonDao
+import com.emmanuel_rono.jibu.ui.theme.model.personDatabase
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             JibuTheme {
-
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background
+                    color = Color.LightGray
                 ) {
-                   val detailRepository= detailRepository()
-                   val getData= detailRepository.getAllData()
-                    LazyColumn(
-                        contentPadding = PaddingValues(all=12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    )
-                    {
-                       items  (items=getData){person -> CustomItem(person=person) }
+                    val personDao = personDatabase.getDatabase(applicationContext).userDao()
+                    val repository = detailRepository(detailDao = personDao)
+                    val viewModelFactory = DataViewModelFactory(repository)
+                    val viewModel: DataViewModel by viewModels { viewModelFactory }
 
+                    val dataState by viewModel.readAll.collectAsState(initial = null)
+                    dataState?.let { data ->
+                        LazyColumn(
+                            contentPadding = PaddingValues(all = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(data) { person ->
+                                // Display each person item in the LazyColumn
+                                Text(
+                                    text = "Name: ${person.firstName} ${person.lastName}, Age: ${person.age}",
+                                    style = TextStyle(fontSize = 16.sp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
     }
-}}
-
-
-
+}
 
 
